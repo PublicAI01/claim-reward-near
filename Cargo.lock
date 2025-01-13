@@ -529,6 +529,7 @@ dependencies = [
  "base64 0.21.7",
  "borsh 0.10.4",
  "ed25519-dalek 1.0.1",
+ "hex",
  "near-contract-standards",
  "near-sdk",
  "near-workspaces",
