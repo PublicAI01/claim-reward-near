@@ -81,6 +81,10 @@ impl Contract {
         self.signer.clone()
     }
 
+    pub fn get_total_claimed(&self) -> u128 {
+        self.total_claimed.clone()
+    }
+
     pub fn get_owner(&self) -> AccountId {
         self.owner.clone()
     }
@@ -135,8 +139,32 @@ impl Contract {
         }
     }
 
+    pub fn claim_nonce(&self, task: u16, user: AccountId) -> u16 {
+        let reward_item = match self.pools.get(&task) {
+            Some(pool)=> pool.pool.get(&user),
+            None => None
+        };
+        if let Some(reward_item) =  reward_item {
+            reward_item.times
+        } else{
+            0
+        }
+    }
+
     pub fn get_account_id(&self) -> AccountId {
         env::current_account_id()
+    }
+
+    #[payable]
+    pub fn withdraw(&mut self, balance: U128) {
+        let receiver = env::predecessor_account_id();
+        require!(receiver == self.owner, "Owner's method");
+        let usdt_contract_id = self.token.clone();
+        assert_eq!(env::attached_deposit(), NearToken::from_yoctonear(1), "Requires attached deposit of exactly 1 yoctoNEAR");
+        ft_contract::ext(usdt_contract_id.clone())
+        .with_attached_deposit(NearToken::from_yoctonear(1))
+        .with_static_gas(Gas::from_gas(10_000_000_000_000))
+        .ft_transfer(receiver, balance);
     }
 
     #[payable]
@@ -162,6 +190,7 @@ impl Contract {
         if let Some(mut pool) = self.pools.get(&task) {
             // Update the total and claimed fields
             pool.claimed = pool.claimed.checked_add(reward).expect("Overflow in claimed");
+            self.total_claimed = self.total_claimed.checked_add(reward).expect("Overflow in claimed");
             let account = env::predecessor_account_id();
             // Retrieve the reward item
             if let Some(mut reward_item) = pool.pool.get(&account) {
