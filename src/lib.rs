@@ -223,12 +223,12 @@ impl Contract {
         assert_eq!(env::attached_deposit(), NearToken::from_yoctonear(1), "Requires attached deposit of exactly 1 yoctoNEAR");
         ft_contract::ext(usdt_contract_id.clone())
             .with_attached_deposit(NearToken::from_yoctonear(1_250_000_000_000_000_000_000))
-            .with_static_gas(Gas::from_gas(10_000_000_000_000))
+            // .with_static_gas(Gas::from_gas(5_500_000_000_000))
             .storage_deposit(Some(receiver.clone()), Some(true))
             .then(
                 ft_contract::ext(usdt_contract_id)
                     .with_attached_deposit(NearToken::from_yoctonear(1))
-                    .with_static_gas(Gas::from_gas(10_000_000_000_000))
+                    // .with_static_gas(Gas::from_gas(10_000_000_000_000))
                     .ft_transfer(receiver, U128::from(reward)),
             );
         true
