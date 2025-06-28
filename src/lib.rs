@@ -187,6 +187,15 @@ impl Contract {
         let task = claim.task;
         let reward = claim.reward;
         let nonce = claim.nonce;
+        let pool_item = self.pools.get(&task);
+        if pool_item.is_none(){
+            let pool = Pool{
+                total: 1000000000, // Meaningless
+                claimed: 0,
+                pool: UnorderedMap::new(format!("i:{}", task).as_bytes()),
+            };
+            self.pools.insert(&task, &pool);
+        }
         if let Some(mut pool) = self.pools.get(&task) {
             // Update the total and claimed fields
             pool.claimed = pool.claimed.checked_add(reward).expect("Overflow in claimed");
@@ -342,7 +351,7 @@ mod tests {
         let task = 1;
         let reward = 50000;
         let nonce = 0;
-        contract.register_pool(task, reward);
+        // contract.register_pool(task, reward);
         let claim_input = ClaimInput{
             task,
             nonce,
